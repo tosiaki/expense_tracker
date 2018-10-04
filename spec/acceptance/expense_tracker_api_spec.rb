@@ -56,8 +56,10 @@ module ExpenseTracker
         'date' => '2017-06-12'
       }, :xml)
 
+      header 'Accept', 'application/json'
       get '/expenses/2017-06-10'
       expect(last_response.status).to eq(200)
+      expect(last_response.media_type).to eq('application/json')
 
       expenses = JSON.parse(last_response.body)
       expect(expenses).to contain_exactly(coffee, zoo)
@@ -65,6 +67,7 @@ module ExpenseTracker
       header 'Accept', 'text/xml'
       get '/expenses/2017-06-12'
       expect(last_response.status).to eq(200)
+      expect(last_response.media_type).to eq('text/xml')
 
       expenses = Ox.parse_obj(last_response.body)
       expect(expenses[0]).to include(payee: 'Whole Foods')

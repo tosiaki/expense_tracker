@@ -24,6 +24,7 @@ module ExpenseTracker
           allow(ledger).to receive(:record)
           .with(expense)
           .and_return(RecordResult.new(true, 417, nil))
+          header 'Content-Type', 'application/json'
         end
 
         it 'returns the expense id' do
@@ -45,6 +46,7 @@ module ExpenseTracker
           allow(ledger).to receive(:record)
           .with(expense)
           .and_return(RecordResult.new(false, 417, 'Expenses incomplete'))
+          header 'Content-Type', 'application/json'
         end
 
         it 'returns with an error message' do
@@ -56,6 +58,48 @@ module ExpenseTracker
         it 'responds with a 422 (Unprocessable entity)' do
           post '/expenses', JSON.generate(expense)
           expect(last_response.status).to eq (422)
+        end
+      end
+
+      context 'when the expense is an unsupported format' do
+        let(:expense) { { 'some' => 'data' } }
+
+        before do
+          allow(ledger).to receive(:record)
+          .with(expense)
+          .and_return(RecordResult.new(true, 417, nil))
+          header 'Content-Type', 'unknown'
+        end
+
+        it 'returns with an error message' do
+          post '/expenses', JSON.generate(expense)
+
+          expect(parsed).to include('error' => 'Unsupported format')
+        end
+
+        it 'responds with a 422 (Unprocessable entity)' do
+          post '/expenses', JSON.generate(expense)
+          expect(last_response.status).to eq (422)
+        end
+      end
+
+      context 'when the content does not match the specified format' do
+        let(:expense) { { 'some' => 'data' } }
+
+        before do
+          allow(ledger).to receive(:record)
+          .with(expense)
+          .and_return(RecordResult.new(true, 417, nil))
+        end
+
+        it 'responds with a 415 (Unsupported Media Type)' do
+          header 'Content-Type', 'application/json'
+          post '/expenses', Ox.dump(expense)
+          expect(last_response.status).to eq (415)
+
+          header 'Content-Type', 'text/xml'
+          post '/expenses', JSON.generate(expense)
+          expect(last_response.status).to eq (415)
         end
       end
     end   
@@ -80,6 +124,8 @@ module ExpenseTracker
           allow(ledger).to receive(:expenses_on)
           .with(date)
           .and_return(@expenses_on_test_day)
+
+          header 'Accept', 'application/json'
         end
 
         it 'returns the expense records as JSON' do
@@ -99,6 +145,8 @@ module ExpenseTracker
           allow(ledger).to receive(:expenses_on)
           .with(date)
           .and_return([])
+
+          header 'Accept', 'application/json'
         end
 
         it 'returns an empty array as JSON' do
@@ -109,6 +157,22 @@ module ExpenseTracker
         it 'responds with a 200 (OK)' do
           get '/expenses/2017-06-11'
           expect(last_response.status).to eq(200)
+        end
+      end
+
+      context 'when it requests for an unsupported format' do
+        let(:date) { '2017-06-11' }
+        before do
+          allow(ledger).to receive(:expenses_on)
+          .with(date)
+          .and_return([])
+
+          header 'Accept', 'text/unknown'
+        end
+
+        it 'responds with a 406 (Not Acceptable)' do
+          get '/expenses/2017-06-11'
+          expect(last_response.status).to eq(406)
         end
       end
     end
