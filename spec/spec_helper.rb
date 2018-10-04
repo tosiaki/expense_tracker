@@ -82,6 +82,10 @@ RSpec.configure do |config|
     config.default_formatter = "doc"
   end
 
+  config.when_first_matching_example_defined(:db) do
+    require_relative 'support/db'
+  end
+
 # The settings below are suggested to provide a good initial experience
 # with RSpec, but feel free to customize to your heart's content.
 =begin

@@ -84,7 +84,7 @@ module ExpenseTracker
 
         it 'returns the expense records as JSON' do
           get '/expenses/2017-06-10'
-          expect(parsed).to include('expenses' => @expenses_on_test_day)
+          expect(parsed).to eq(@expenses_on_test_day)
         end
 
         it 'responds with a 200 (OK)' do
@@ -103,7 +103,7 @@ module ExpenseTracker
 
         it 'returns an empty array as JSON' do
           get '/expenses/2017-06-11'
-          expect(parsed).to include('expenses' => [])
+          expect(parsed).to eq([])
         end
 
         it 'responds with a 200 (OK)' do
